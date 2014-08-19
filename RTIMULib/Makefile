@@ -1,5 +1,6 @@
-CXX = arm-linux-gnueabihf-g++
-CXXFLAGS = -g -O2
+CXXFLAGS = -g -O2 -fvisibility=hidden -fPIC
+LDFLAGS = -shared
+LDLIBS = -lpthread
 
 SRCS = \
 	CWrapper.cpp \
@@ -16,5 +17,5 @@ SRCS = \
 	RTIMUSettings.cpp \
 	RTMath.cpp
 
-libRTIMULib.so : $(SRCS)
-	$(CXX) $(CXXFLAGS) -fvisibility=hidden -shared -fPIC -lpthread -o $@ $^
+libRTIMULib.so : $(SRCS:%.cpp=%.o)
+	$(LINK.cpp) $^ $(LDLIBS) -o $@
