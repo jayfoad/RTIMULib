@@ -1,4 +1,5 @@
 CXX = arm-linux-gnueabihf-g++
+CXXFLAGS = -g -O2
 
 SRCS = \
 	CWrapper.cpp \
@@ -16,4 +17,4 @@ SRCS = \
 	RTMath.cpp
 
 libRTIMULib.so : $(SRCS)
-	$(CXX) $(CFLAGS) -fvisibility=hidden -shared -fPIC -lpthread -o $@ $^
+	$(CXX) $(CXXFLAGS) -fvisibility=hidden -shared -fPIC -lpthread -o $@ $^
