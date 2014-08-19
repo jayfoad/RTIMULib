@@ -101,7 +101,7 @@ extern "C" int getData(RTIMU_DATA *pdata)
 		pthread_cond_wait(&dataCond, &dataLock);
 	*pdata = data;
 
-	pthread_mutex_lock(&dataLock);
+	pthread_mutex_unlock(&dataLock);
 
 	return true;
 }
