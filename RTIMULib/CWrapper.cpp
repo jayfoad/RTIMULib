@@ -128,12 +128,12 @@ extern "C" void setCalibrationMode(int mode)
 	if (mode) {
 		compassMin = RTVector3(+10000, +10000, +10000);
 		compassMax = RTVector3(-10000, -10000, -10000);
-	} else if (dataValid) {
-		settings->m_compassCalValid = true;
+	} else {
+		settings->m_compassCalValid = dataValid;
 		settings->m_compassCalMin = compassMin;
 		settings->m_compassCalMax = compassMax;
 		settings->saveSettings();
-		imu->setCalibrationData(true, compassMin, compassMax);
+		imu->setCalibrationData(dataValid, compassMin, compassMax);
 	}
 
 	calibrationMode = mode;
