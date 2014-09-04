@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
@@ -9,14 +10,17 @@ namespace {
 	bool started = false;
 	bool stopping = false;
 
+	RTIMUSettings *settings;
+	RTIMU *imu;
 	pthread_mutex_t dataLock = PTHREAD_MUTEX_INITIALIZER;
+	bool calibrationMode = false;
 	pthread_cond_t dataCond = PTHREAD_COND_INITIALIZER;
 	bool dataValid = false;
 	RTIMU_DATA data;
+	RTVector3 compassMin;
+	RTVector3 compassMax;
 
 	struct Wrapper {
-		RTIMUSettings *settings;
-		RTIMU *imu;
 		int interval; // in microseconds
 		pthread_t thread;
 
@@ -67,6 +71,14 @@ namespace {
 					pthread_mutex_lock(&dataLock);
 
 					data = imu->getIMUData();
+					if (calibrationMode) {
+						compassMin.setX(std::min(compassMin.x(), data.compass.x()));
+						compassMin.setY(std::min(compassMin.y(), data.compass.y()));
+						compassMin.setZ(std::min(compassMin.z(), data.compass.z()));
+						compassMax.setX(std::max(compassMax.x(), data.compass.x()));
+						compassMax.setY(std::max(compassMax.y(), data.compass.y()));
+						compassMax.setZ(std::max(compassMax.z(), data.compass.z()));
+					}
 
 					dataValid = true;
 					pthread_cond_signal(&dataCond);
@@ -104,6 +116,32 @@ extern "C" int getData(RTIMU_DATA *pdata)
 	pthread_mutex_unlock(&dataLock);
 
 	return true;
+}
+
+extern "C" void setCalibrationMode(int mode)
+{
+	if (!started || stopping)
+		return;
+
+	pthread_mutex_lock(&dataLock);
+
+	if (mode) {
+		compassMin = RTVector3(+10000, +10000, +10000);
+		compassMax = RTVector3(-10000, -10000, -10000);
+	} else if (dataValid) {
+		settings->m_compassCalValid = true;
+		settings->m_compassCalMin = compassMin;
+		settings->m_compassCalMax = compassMax;
+		settings->saveSettings();
+		imu->setCalibrationData(true, compassMin, compassMax);
+	}
+
+	calibrationMode = mode;
+	imu->setCalibrationMode(mode);
+
+	dataValid = false;
+
+	pthread_mutex_unlock(&dataLock);
 }
 
 #pragma GCC visibility pop
