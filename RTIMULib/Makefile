@@ -1,4 +1,4 @@
-CXXFLAGS = -g -O2 -fvisibility=hidden -fPIC
+CXXFLAGS = -g -O2 -fvisibility=hidden -fPIC -Wall
 LDFLAGS = -shared
 LDLIBS = -lpthread
 
